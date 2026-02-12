@@ -9,7 +9,7 @@
   <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
-    <version>3.2.5</version>
+    <version>3.4.5</version>
     <relativePath/>
   </parent>
 
@@ -20,7 +20,7 @@
   <description>Shipping line freight operations - POC</description>
 
   <properties>
-    <java.version>17</java.version>
+    <java.version>21</java.version>
   </properties>
 
   <dependencies>
@@ -78,7 +78,7 @@
       <plugin>
         <groupId>com.spotify.fmt</groupId>
         <artifactId>fmt-maven-plugin</artifactId>
-        <version>2.22</version>
+        <version>2.29</version>
         <executions>
           <execution>
             <goals>

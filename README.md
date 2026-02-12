@@ -26,7 +26,7 @@ Port  ←──  Voyage  ──→  Port
 
 | Tool          | Version  |
 |---------------|----------|
-| Java (JDK)    | 17+      |
+| Java (JDK)    | 21+      |
 | Maven         | 3.8+     |
 | Docker        | 20+      |
 | Docker Compose| 2+       |

@@ -12,9 +12,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
-/**
- * A freight booking made by the internal ops team, assigning a container to a voyage.
- */
+/** A freight booking made by the internal ops team, assigning a container to a voyage. */
 @Entity
 @Table(name = "freight_orders")
 public class FreightOrder extends BaseEntity {

@@ -14,6 +14,7 @@ import com.shipping.freightops.entity.Voyage;
 import com.shipping.freightops.enums.ContainerSize;
 import com.shipping.freightops.enums.ContainerType;
 import com.shipping.freightops.repository.ContainerRepository;
+import com.shipping.freightops.repository.FreightOrderRepository;
 import com.shipping.freightops.repository.PortRepository;
 import com.shipping.freightops.repository.VesselRepository;
 import com.shipping.freightops.repository.VoyageRepository;
@@ -30,8 +31,8 @@ import org.springframework.test.web.servlet.MockMvc;
 /**
  * Integration test for {@link FreightOrderController}.
  *
- * <p>Uses H2 in-memory DB (see src/test/resources/application.properties). This is a good
- * reference for writing additional controller tests.
+ * <p>Uses H2 in-memory DB (see src/test/resources/application.properties). This is a good reference
+ * for writing additional controller tests.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -43,13 +44,15 @@ class FreightOrderControllerTest {
   @Autowired private VesselRepository vesselRepository;
   @Autowired private ContainerRepository containerRepository;
   @Autowired private VoyageRepository voyageRepository;
+  @Autowired private FreightOrderRepository freightOrderRepository;
 
   private Voyage savedVoyage;
   private Container savedContainer;
 
   @BeforeEach
   void setUp() {
-    // Clear state between tests
+    // Clear state between tests — children first to respect FK constraints
+    freightOrderRepository.deleteAll();
     voyageRepository.deleteAll();
     containerRepository.deleteAll();
     vesselRepository.deleteAll();
