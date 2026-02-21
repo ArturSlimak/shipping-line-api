@@ -4,7 +4,6 @@ import com.shipping.freightops.enums.ContainerSize;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-
 import java.math.BigDecimal;
 
 @Entity

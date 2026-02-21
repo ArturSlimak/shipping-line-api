@@ -1,10 +1,14 @@
 package com.shipping.freightops.controller;
 
 import com.shipping.freightops.dto.CreateVoyageRequest;
+import com.shipping.freightops.dto.VoyagePriceRequest;
+import com.shipping.freightops.dto.VoyagePriceResponse;
 import com.shipping.freightops.dto.VoyageResponse;
 import com.shipping.freightops.entity.Voyage;
+import com.shipping.freightops.entity.VoyagePrice;
 import com.shipping.freightops.enums.VoyageStatus;
 import com.shipping.freightops.service.VoyageService;
+import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
@@ -51,5 +55,12 @@ public class VoyageController {
   public ResponseEntity<List<VoyageResponse>> getAllByStatus(@RequestParam VoyageStatus status) {
     List<Voyage> voyages = voyageService.getAllByStatus(status);
     return ResponseEntity.ok(VoyageResponse.VoyageResponses(voyages));
+  }
+
+  @PostMapping("/{voyageId}/prices")
+  public ResponseEntity<VoyagePriceResponse> setPriceForContainer(
+      @PathVariable Long voyageId, @Valid @RequestBody VoyagePriceRequest voyagePriceRequest) {
+    VoyagePrice voyagePrice = voyageService.createVoyagePrice(voyageId, voyagePriceRequest);
+    return ResponseEntity.ok(VoyagePriceResponse.fromEntity(voyagePrice));
   }
 }
