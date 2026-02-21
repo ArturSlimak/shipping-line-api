@@ -94,7 +94,8 @@ public class VoyageController {
   public ResponseEntity<VoyagePriceResponse> setPriceForContainer(
       @PathVariable Long voyageId, @Valid @RequestBody VoyagePriceRequest voyagePriceRequest) {
     VoyagePrice voyagePrice = voyageService.createVoyagePrice(voyageId, voyagePriceRequest);
-    return ResponseEntity.ok(VoyagePriceResponse.fromEntity(voyagePrice));
+    return ResponseEntity.created(URI.create("/api/v1/voyages/" + voyageId + "/prices"))
+        .body(VoyagePriceResponse.fromEntity(voyagePrice));
   }
 
   @Operation(summary = "Get all prices for a voyage (paginated)")

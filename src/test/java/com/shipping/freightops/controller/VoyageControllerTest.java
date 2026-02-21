@@ -1,13 +1,22 @@
 package com.shipping.freightops.controller;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shipping.freightops.dto.CreateVoyageRequest;
+import com.shipping.freightops.dto.VoyagePriceRequest;
 import com.shipping.freightops.entity.Port;
 import com.shipping.freightops.entity.Vessel;
 import com.shipping.freightops.entity.Voyage;
+import com.shipping.freightops.entity.VoyagePrice;
+import com.shipping.freightops.enums.ContainerSize;
 import com.shipping.freightops.repository.PortRepository;
 import com.shipping.freightops.repository.VesselRepository;
+import com.shipping.freightops.repository.VoyagePriceRepository;
 import com.shipping.freightops.repository.VoyageRepository;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,6 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
@@ -27,6 +37,8 @@ public class VoyageControllerTest {
   @Autowired private PortRepository portRepository;
   @Autowired private MockMvc mockMvc;
   @Autowired private VesselRepository vesselRepository;
+  @Autowired private VoyagePriceRepository voyagePriceRepository;
+
   private Vessel vessel;
   private Port arrivalPort;
   private Port departurePort;
@@ -35,6 +47,7 @@ public class VoyageControllerTest {
 
   @BeforeEach
   void setUp() {
+    voyagePriceRepository.deleteAll();
     voyageRepository.deleteAll();
     vesselRepository.deleteAll();
     portRepository.deleteAll();
@@ -59,8 +72,8 @@ public class VoyageControllerTest {
   public void getAll() throws Exception {
     mockMvc
         .perform(MockMvcRequestBuilders.get("/api/v1/voyages"))
-        .andExpect(MockMvcResultMatchers.status().isOk())
-        .andExpect(MockMvcResultMatchers.jsonPath("$").isArray());
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$").isArray());
   }
 
   @Test
@@ -70,8 +83,8 @@ public class VoyageControllerTest {
         .perform(
             MockMvcRequestBuilders.get("/api/v1/voyages")
                 .param("status", voyage.getStatus().toString()))
-        .andExpect(MockMvcResultMatchers.status().isOk())
-        .andExpect(MockMvcResultMatchers.jsonPath("$").isArray());
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$").isArray());
   }
 
   @Test
@@ -79,8 +92,8 @@ public class VoyageControllerTest {
   public void getByIdFound() throws Exception {
     mockMvc
         .perform(MockMvcRequestBuilders.get("/api/v1/voyages/" + voyage.getId()))
-        .andExpect(MockMvcResultMatchers.status().isOk())
-        .andExpect(MockMvcResultMatchers.jsonPath("$").isMap());
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$").isMap());
   }
 
   @Test
@@ -88,7 +101,7 @@ public class VoyageControllerTest {
   public void getByIdNotFound() throws Exception {
     mockMvc
         .perform(MockMvcRequestBuilders.get("/api/v1/voyages/" + (int) (Math.random() * 1000)))
-        .andExpect(MockMvcResultMatchers.status().is4xxClientError())
+        .andExpect(status().is4xxClientError())
         .andExpect(
             MockMvcResultMatchers.content()
                 .string(CoreMatchers.containsStringIgnoringCase("voyage not found")));
@@ -106,10 +119,10 @@ public class VoyageControllerTest {
     voyageRequest.setArrivalTime(LocalDateTime.of(2026, 12, 12, 22, 0));
     mockMvc
         .perform(
-            MockMvcRequestBuilders.post("/api/v1/voyages")
+            post("/api/v1/voyages")
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(voyageRequest)))
-        .andExpect(MockMvcResultMatchers.status().isCreated());
+        .andExpect(status().isCreated());
   }
 
   @Test
@@ -122,10 +135,8 @@ public class VoyageControllerTest {
     voyageRequest.setDepartureTime(LocalDateTime.of(2026, 12, 12, 12, 0));
     voyageRequest.setArrivalTime(LocalDateTime.of(2026, 12, 12, 11, 0));
     mockMvc
-        .perform(
-            MockMvcRequestBuilders.post("/api/v1/voyages")
-                .content(objectMapper.writeValueAsString(voyageRequest)))
-        .andExpect(MockMvcResultMatchers.status().is4xxClientError());
+        .perform(post("/api/v1/voyages").content(objectMapper.writeValueAsString(voyageRequest)))
+        .andExpect(status().is4xxClientError());
   }
 
   @Test
@@ -138,10 +149,8 @@ public class VoyageControllerTest {
     voyageRequest.setDepartureTime(LocalDateTime.of(2026, 2, 14, 12, 0));
     voyageRequest.setArrivalTime(LocalDateTime.of(2026, 12, 12, 11, 0));
     mockMvc
-        .perform(
-            MockMvcRequestBuilders.post("/api/v1/voyages")
-                .content(objectMapper.writeValueAsString(voyageRequest)))
-        .andExpect(MockMvcResultMatchers.status().is4xxClientError());
+        .perform(post("/api/v1/voyages").content(objectMapper.writeValueAsString(voyageRequest)))
+        .andExpect(status().is4xxClientError());
   }
 
   @Test
@@ -154,6 +163,77 @@ public class VoyageControllerTest {
                     + this.voyage.getId().toString()
                     + "/"
                     + this.voyage.getStatus().name()))
-        .andExpect(MockMvcResultMatchers.status().isOk());
+        .andExpect(status().isOk());
+  }
+
+  @Test
+  @DisplayName("POST /api/v1/voyages/{voyageId}/prices → 201 Created")
+  void createVoyagePrice_returnsCreated() throws Exception {
+    VoyagePriceRequest request = new VoyagePriceRequest();
+    request.setContainerSize(ContainerSize.FORTY_FOOT);
+    request.setBasePriceUsd(BigDecimal.valueOf(1500));
+
+    mockMvc
+        .perform(
+            post("/api/v1/voyages/" + voyage.getId() + "/prices")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.voyageId").value(voyage.getId()))
+        .andExpect(jsonPath("$.containerSize").value("FORTY_FOOT"))
+        .andExpect(jsonPath("$.basePriceUsd").value(1500));
+  }
+
+  @Test
+  @DisplayName("POST /api/v1/voyages/{voyageId}/prices → 409 Conflict if price exists")
+  void createVoyagePrice_returnsConflict() throws Exception {
+    VoyagePrice existingPrice = new VoyagePrice();
+    existingPrice.setVoyage(voyage);
+    existingPrice.setContainerSize(ContainerSize.FORTY_FOOT);
+    existingPrice.setBasePriceUsd(BigDecimal.valueOf(1500));
+    voyagePriceRepository.save(existingPrice);
+
+    VoyagePriceRequest request = new VoyagePriceRequest();
+    request.setContainerSize(ContainerSize.FORTY_FOOT);
+    request.setBasePriceUsd(BigDecimal.valueOf(2000));
+
+    mockMvc
+        .perform(
+            post("/api/v1/voyages/" + voyage.getId() + "/prices")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isConflict());
+  }
+
+  @Test
+  @DisplayName("POST /api/v1/voyages/{voyageId}/prices → 404 Not Found if voyage does not exist")
+  void createVoyagePrice_returnsNotFound() throws Exception {
+
+    VoyagePriceRequest request = new VoyagePriceRequest();
+    request.setContainerSize(ContainerSize.TWENTY_FOOT);
+    request.setBasePriceUsd(BigDecimal.valueOf(1000));
+
+    mockMvc
+        .perform(
+            post("/api/v1/voyages/99999/prices")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("POST /api/v1/voyages/{id}/prices → 400 Bad Request for invalid input")
+  void createVoyagePrice_returnsBadRequest() throws Exception {
+
+    VoyagePriceRequest request = new VoyagePriceRequest();
+    request.setContainerSize(null);
+    request.setBasePriceUsd(BigDecimal.valueOf(-500));
+
+    mockMvc
+        .perform(
+            post("/api/v1/voyages/" + voyage.getId() + "/prices")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+        .andExpect(status().isBadRequest());
   }
 }
