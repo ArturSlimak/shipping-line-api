@@ -10,8 +10,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.*;
-import org.springframework.boot.context.properties.bind.DefaultValue;
-
 import java.math.BigDecimal;
 
 /** A freight booking made by the internal ops team, assigning a container to a voyage. */
