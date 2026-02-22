@@ -16,6 +16,7 @@ All issues follow the pattern: `DOMAIN-NNN — Title`
 | `FIN`  | Finance & Ownership    |
 | `AGT`  | Agents & Commissions   |
 | `TRK`  | Tracking & Barcodes    |
+| `AIP`  | AI-Powered Pricing     |
 
 When referencing dependencies, use the full code (e.g. "Depends on `PRC-001`").
 
@@ -458,8 +459,8 @@ After a voyage is `COMPLETED`, calculate each agent's commission from the orders
 
 **Business rules:**
 
-- Commission = `agent.commissionPercent` × sum of `finalPriceUsd` for that agent's `DELIVERED`
-  orders on the voyage
+- Commission = `agent.commissionPercent` × sum of `finalPriceUsd` for that agent's `DELIVERED`orders
+  on the voyage
 - Only `DELIVERED` orders count
 - Only `COMPLETED` voyages (return 409 otherwise)
 
@@ -519,7 +520,6 @@ Add a reusable service that generates Code 128 barcodes and QR codes as PNG byte
 foundation for all tracking and label features.
 
 **Setup:**
-
 - Add ZXing (Zebra Crossing) dependency to `pom.xml`:
   ```xml
   <dependency>
@@ -537,14 +537,12 @@ foundation for all tracking and label features.
 **What to create:**
 
 **`BarcodeService`** with two methods:
-
 - `byte[] generateBarcode(String content, int width, int height)` — Code 128 linear barcode
 - `byte[] generateQrCode(String content, int width, int height)` — QR code
 
 Both return a PNG image as `byte[]`.
 
 **New endpoints (for testing/demo):**
-
 - `GET /api/v1/barcodes/code128?content=MSCU1234567&width=300&height=80` — returns PNG
 - `GET /api/v1/barcodes/qr?content=https://example.com/track/FO-001&width=250&height=250` — returns
   PNG
@@ -552,13 +550,11 @@ Both return a PNG image as `byte[]`.
 Set `Content-Type: image/png` on the response.
 
 **Hints:**
-
 - Use `MultiFormatWriter` from ZXing for generation
 - Use `MatrixToImageWriter` from `zxing-javase` to convert `BitMatrix` → PNG bytes
 - Keep the service stateless and injectable — other issues will depend on it
 
 **Acceptance criteria:**
-
 - [ ] ZXing dependencies added
 - [ ] `BarcodeService` generates both Code 128 and QR code as PNG
 - [ ] Demo endpoints return valid images
@@ -576,12 +572,10 @@ Create a public-facing, read-only endpoint that lets anyone check the status of 
 container by its code. This is the URL that QR codes will point to.
 
 **New endpoints:**
-
 - `GET /api/v1/track/order/{orderId}` — track a freight order
 - `GET /api/v1/track/container/{containerCode}` — track a container across all its voyages
 
 **Order tracking response:**
-
 ```json
 {
   "orderId": 42,
@@ -600,7 +594,6 @@ container by its code. This is the URL that QR codes will point to.
 ```
 
 **Container tracking response:**
-
 ```json
 {
   "containerCode": "MSCU1234567",
@@ -628,19 +621,16 @@ container by its code. This is the URL that QR codes will point to.
 ```
 
 **What to create:**
-
 - `TrackingController` — separate controller, no auth required
 - `TrackingService` — queries orders/containers and assembles the response
 - `OrderTrackingResponse` and `ContainerTrackingResponse` DTOs
 
 **Business rules:**
-
 - These endpoints are read-only, no mutations
 - Return 404 with a clear message if order or container not found
 - Container tracking shows all voyages (via freight orders), sorted by departure time
 
 **Acceptance criteria:**
-
 - [ ] Order tracking returns current status and voyage info
 - [ ] Container tracking returns full voyage history
 - [ ] 404 for unknown order ID or container code
@@ -657,11 +647,9 @@ container by its code. This is the URL that QR codes will point to.
 Generate a printable container label PDF that port and warehouse staff can scan.
 
 **New endpoint:**
-
 - `GET /api/v1/containers/{id}/label` — returns PDF (Content-Type: `application/pdf`)
 
 **Label should include:**
-
 - Container code as both human-readable text and Code 128 barcode
 - QR code encoding the tracking URL: `{app.base-url}/api/v1/track/container/{containerCode}`
 - Container size and type
@@ -669,14 +657,12 @@ Generate a printable container label PDF that port and warehouse staff can scan.
   departure/arrival ports, departure date
 
 **Technical hints:**
-
 - Use the same PDF library from `INV-001` (OpenPDF recommended)
 - Inject `BarcodeService` from `TRK-001` to generate barcode/QR images
 - Embed the PNG images into the PDF using the library's image API
 - Add `app.base-url` to `application.properties` (default: `http://localhost:8080`)
 
 **Label layout suggestion:**
-
 ```
 ┌──────────────────────────────────┐
 │  MSCU1234567                     │
@@ -697,7 +683,6 @@ Generate a printable container label PDF that port and warehouse staff can scan.
 ```
 
 **Acceptance criteria:**
-
 - [ ] PDF generates with barcode and QR code
 - [ ] QR code encodes the correct tracking URL
 - [ ] Voyage info shown if container is on an active booking
@@ -715,19 +700,16 @@ Generate a printable container label PDF that port and warehouse staff can scan.
 Add a QR code to the invoice PDF that links to the order tracking page.
 
 **Changes to `InvoiceService` (from `INV-001`):**
-
 - After the existing invoice content, add a QR code in the bottom-right area
 - QR encodes: `{app.base-url}/api/v1/track/order/{orderId}`
 - Add small label text below the QR: "Scan to track your shipment"
 
 **Technical hints:**
-
 - Inject `BarcodeService` from `TRK-001`
 - Generate QR as `byte[]`, embed as image in the PDF
 - Keep it small (e.g. 100x100 px) so it doesn't dominate the invoice layout
 
 **Acceptance criteria:**
-
 - [ ] Invoice PDF now includes a QR code
 - [ ] QR encodes the correct tracking URL
 - [ ] Existing invoice tests still pass
@@ -745,7 +727,6 @@ Log status changes and scan events to build a full audit trail for each freight 
 backbone of shipment visibility.
 
 **New entity: `TrackingEvent`**
-
 - `id`, `createdAt`, `updatedAt` (from BaseEntity)
 - `freightOrderId` (FK to FreightOrder)
 - `eventType` (enum: `STATUS_CHANGE`, `GATE_IN`, `GATE_OUT`, `LOADED`, `DISCHARGED`,
@@ -756,7 +737,6 @@ backbone of shipment visibility.
 - `eventTime` (LocalDateTime — when it actually happened, may differ from `createdAt`)
 
 **New endpoints:**
-
 - `POST /api/v1/freight-orders/{id}/events` — log a new tracking event
 - `GET /api/v1/freight-orders/{id}/events` — list all events for an order (sorted by `eventTime`
   ascending)
@@ -768,11 +748,9 @@ backbone of shipment visibility.
 - Manual events (gate scans, notes) are added via the POST endpoint
 
 **Update tracking endpoint (`TRK-002`):**
-
 - Add an `events` array to the order tracking response so the tracking page shows the full timeline
 
 **Event list response:**
-
 ```json
 [
   {
@@ -807,7 +785,6 @@ backbone of shipment visibility.
 ```
 
 **Acceptance criteria:**
-
 - [ ] Manual events can be logged via POST
 - [ ] Status changes automatically create events
 - [ ] Events listed in chronological order
@@ -826,11 +803,9 @@ Generate a gate pass document that authorizes a container to enter or leave a po
 a standard document in freight operations.
 
 **New endpoint:**
-
 - `GET /api/v1/freight-orders/{id}/gate-pass` — returns PDF (Content-Type: `application/pdf`)
 
 **Gate pass should include:**
-
 - Gate pass number (auto-generated, e.g. `GP-2025-00042`)
 - QR code encoding the tracking URL for the order
 - Container code with Code 128 barcode
@@ -843,11 +818,9 @@ a standard document in freight operations.
 - Large bold text: `GATE IN` or `GATE OUT` (request param: `direction=IN|OUT`)
 
 **New endpoint parameter:**
-
 - `GET /api/v1/freight-orders/{id}/gate-pass?direction=IN`
 
 **Gate pass layout suggestion:**
-
 ```
 ┌─────────────────────────────────────┐
 │         *** GATE IN PASS ***        │
@@ -872,19 +845,407 @@ a standard document in freight operations.
 ```
 
 **Business rules:**
-
 - Gate pass can only be generated for orders with status `PENDING`, `CONFIRMED`, or `IN_TRANSIT`
 - Return 409 if order is `CANCELLED` or `DELIVERED`
 - `direction` parameter is required, return 400 if missing
 
 **Acceptance criteria:**
-
 - [ ] PDF generates with both barcode and QR code
 - [ ] Direction (IN/OUT) shown prominently
 - [ ] Valid date range calculated from voyage departure
 - [ ] Returns 409 for cancelled/delivered orders
 - [ ] Returns 400 for missing direction parameter
 - [ ] Test verifies PDF generation for both directions
+- [ ] Code is formatted
+
+---
+
+## AIP-001 — AI Service Abstraction and LLM Integration 🟡
+
+**Labels:** `backend`, `ai`, `infrastructure`
+
+Create a provider-agnostic AI service layer that can talk to any LLM (Claude, OpenAI, Ollama, etc.)
+without leaking provider details into business logic.
+
+**What to create:**
+
+**Interface: `AiClient`**
+
+```java
+public interface AiClient {
+
+  String complete(String systemPrompt, String userPrompt);
+}
+```
+
+**Implementations (pick one as default, wire via Spring profile):**
+
+- `ClaudeAiClient` — calls Anthropic Messages API
+- `OpenAiClient` — calls OpenAI Chat Completions API
+
+Use `RestClient` (Spring 6.1+) for HTTP calls. No SDK dependencies — keep it lean.
+
+**Configuration:**
+
+```properties
+# application.properties
+app.ai.provider=claude            # or "openai" or "ollama"
+app.ai.api-key=${AI_API_KEY}
+app.ai.model=claude-sonnet-4-20250514
+app.ai.max-tokens=1024
+app.ai.base-url=https://api.anthropic.com
+```
+
+**Spring wiring:**
+
+- Use `@ConditionalOnProperty(name = "app.ai.provider", havingValue = "claude")` to auto-select the
+  implementation
+- Create an `AiConfig` class that reads properties and builds the active client bean
+
+**New endpoint (for smoke testing):**
+
+- `POST /api/v1/ai/test` — accepts `{ "prompt": "..." }`, returns raw LLM response
+- This endpoint should be disabled in production via a property flag
+
+**Hints:**
+
+- Don't add SDKs — just raw HTTP with `RestClient`
+- Always set a timeout (30s suggested)
+- Log token usage if the provider returns it
+- Add a `NoOpAiClient` implementation that returns a canned response — useful for tests
+
+**Acceptance criteria:**
+
+- [ ] `AiClient` interface defined
+- [ ] At least one real provider implemented (Claude or OpenAI)
+- [ ] `NoOpAiClient` available for tests
+- [ ] Provider selected via `app.ai.provider` property
+- [ ] API key read from environment variable, not hardcoded
+- [ ] Smoke test endpoint works
+- [ ] Test using `NoOpAiClient` verifies wiring without real API calls
+- [ ] Code is formatted
+
+---
+
+## AIP-002 — AI Price Suggestion from Historical Data 🟠
+
+**Labels:** `backend`, `ai`, `business-logic`, `pricing`
+**Depends on:** `AIP-001`, `PRC-001`
+
+When setting a voyage price, the system should suggest a price range based on historical pricing
+data from past voyages on the same or similar routes.
+
+**New endpoint:**
+
+- `GET /api/v1/voyages/{voyageId}/price-suggestion?containerSize=TWENTY_FOOT`
+
+**How it works:**
+
+1. Query historical `VoyagePrice` + `Voyage` data for the same route (same departure/arrival port
+   pair) or similar routes (same region)
+2. Gather: past prices, container sizes, voyage dates, number of orders per voyage
+3. Build a structured prompt with this data and ask the LLM to suggest a price range with reasoning
+4. Parse the LLM response into a structured DTO
+
+**What to create:**
+
+- `PriceSuggestionService` — gathers historical data, builds prompt, calls `AiClient`, parses
+  response
+- `PriceSuggestionResponse` DTO
+
+**Response:**
+
+```json
+{
+  "voyageNumber": "VOY-2025-010",
+  "route": "Jebel Ali → Shanghai",
+  "containerSize": "TWENTY_FOOT",
+  "suggestedPriceLowUsd": 1100.00,
+  "suggestedPriceHighUsd": 1350.00,
+  "confidence": "MEDIUM",
+  "reasoning": "Based on 12 past voyages on this route over the last 6 months, the average price was $1,180/TEU. Recent voyages show an upward trend of ~8%. Suggested range accounts for seasonal demand increase in Q2.",
+  "dataPoints": 12,
+  "historicalAvgUsd": 1180.00,
+  "historicalMinUsd": 950.00,
+  "historicalMaxUsd": 1400.00
+}
+```
+
+**Prompt engineering hints:**
+
+- Include structured data in the prompt (route, dates, prices as a table)
+- Ask for JSON output with specific fields
+- Include instructions: "If fewer than 3 data points, set confidence to LOW and note insufficient
+  data"
+- Ask the LLM to explain its reasoning in 2–3 sentences
+
+**Confidence levels:**
+
+- `HIGH` — 10+ data points, consistent pricing, same route
+- `MEDIUM` — 3–9 data points or similar (not identical) routes used
+- `LOW` — fewer than 3 data points or no matching routes
+
+**Edge cases:**
+
+- No historical data for this route → return confidence `LOW` with a message suggesting manual
+  pricing
+- Route has data but only for the other container size → note this in reasoning
+
+**Acceptance criteria:**
+
+- [ ] Endpoint returns a structured price suggestion
+- [ ] Historical data gathered correctly from past voyages
+- [ ] Confidence level reflects data quality
+- [ ] Works gracefully with zero historical data
+- [ ] Test with `NoOpAiClient` verifies the flow end-to-end
+- [ ] Code is formatted
+
+---
+
+## AIP-003 — Market Data Integration for Enriched Suggestions 🟠
+
+**Labels:** `backend`, `ai`, `business-logic`, `pricing`
+**Depends on:** `AIP-002`
+
+Enrich the price suggestion by pulling in external market rate data so the LLM can compare internal
+pricing against the broader market.
+
+**What to create:**
+
+**Interface: `MarketDataProvider`**
+
+```java
+public interface MarketDataProvider {
+
+  Optional<MarketRate> getCurrentRate(String originPort, String destPort, ContainerSize size);
+}
+```
+
+**`MarketRate` DTO:**
+
+```java
+public class MarketRate {
+
+  private BigDecimal spotRateUsd;
+  private String source;          // e.g. "Freightos Baltic Index"
+  private LocalDate asOfDate;
+  private String route;           // e.g. "China → North Europe"
+}
+```
+
+**Implementations:**
+
+- `FreightosMarketDataProvider` — calls Freightos FBX API (free tier available)
+- `StaticMarketDataProvider` — returns hardcoded sample rates for demo/testing
+
+**Configuration:**
+
+```properties
+app.market-data.provider=static   # or "freightos"
+app.market-data.api-key=${MARKET_DATA_API_KEY}
+```
+
+**Update `PriceSuggestionService` (from `AIP-002`):**
+
+- Before calling the LLM, fetch current market rate
+- Include it in the prompt: "The current market spot rate for this route is $X/TEU as of [date]"
+- Update the response DTO:
+
+```json
+{
+  "suggestedPriceLowUsd": 1200.00,
+  "suggestedPriceHighUsd": 1450.00,
+  "confidence": "HIGH",
+  "reasoning": "Historical average is $1,180/TEU across 12 voyages. Current market spot rate is $1,380/TEU (Freightos Baltic Index, 2025-03-28), indicating upward pressure. Suggested range positions you competitively below spot while maintaining margin.",
+  "marketRate": {
+    "spotRateUsd": 1380.00,
+    "source": "Freightos Baltic Index",
+    "asOfDate": "2025-03-28"
+  },
+  "dataPoints": 12,
+  "historicalAvgUsd": 1180.00
+}
+```
+
+**Acceptance criteria:**
+
+- [ ] Market data provider abstraction defined
+- [ ] At least `StaticMarketDataProvider` implemented
+- [ ] Market rate included in LLM prompt and response
+- [ ] Suggestion works gracefully when market data is unavailable
+- [ ] Test with static provider verifies enriched suggestion
+- [ ] Code is formatted
+
+---
+
+## AIP-004 — Risk Factor Analysis from News and Events 🔴
+
+**Labels:** `backend`, `ai`, `business-logic`, `pricing`
+**Depends on:** `AIP-002`
+
+Add qualitative risk factor analysis by feeding recent shipping-related news into the price
+suggestion. The LLM synthesizes news headlines into risk factors that may affect pricing.
+
+**What to create:**
+
+**Interface: `NewsProvider`**
+
+```java
+public interface NewsProvider {
+
+  List<NewsItem> getRecentHeadlines(String route, int maxResults);
+}
+```
+
+**`NewsItem` DTO:**
+
+```java
+public class NewsItem {
+
+  private String headline;
+  private String source;
+  private LocalDate publishedDate;
+  private String summary;   // 1-2 sentences
+}
+```
+
+**Implementations:**
+
+- `RssNewsProvider` — fetches from public RSS feeds (e.g. Lloyd's List, The Loadstar, gCaptain)
+- `StaticNewsProvider` — returns sample headlines for demo/testing
+
+**Configuration:**
+
+```properties
+app.news.provider=static   # or "rss"
+app.news.feeds=https://gcaptain.com/feed/,https://theloadstar.com/feed/
+```
+
+**Update `PriceSuggestionService`:**
+
+- Fetch recent headlines relevant to the route (keyword matching on port names, regions)
+- Include top 5 headlines in the LLM prompt
+- Ask the LLM to identify risk factors and their potential impact on pricing
+- Add to response:
+
+```json
+{
+  "suggestedPriceLowUsd": 1300.00,
+  "suggestedPriceHighUsd": 1550.00,
+  "confidence": "MEDIUM",
+  "reasoning": "...",
+  "riskFactors": [
+    {
+      "factor": "Red Sea routing disruption",
+      "impact": "HIGH",
+      "description": "Ongoing Houthi attacks forcing vessels via Cape of Good Hope, adding 10-14 days transit time and increasing fuel costs."
+    },
+    {
+      "factor": "Shanghai port congestion",
+      "impact": "MEDIUM",
+      "description": "Reports of 3-5 day delays at Shanghai terminals due to surge in export volumes ahead of Q2."
+    }
+  ]
+}
+```
+
+**Important:** The LLM is synthesizing and reasoning about news — not making predictions. Frame it
+as "risk factors to consider" not "price will go up 15%."
+
+**Acceptance criteria:**
+
+- [ ] News provider abstraction defined
+- [ ] At least `StaticNewsProvider` implemented
+- [ ] Risk factors included in suggestion response
+- [ ] LLM prompt clearly separates facts from analysis
+- [ ] Works gracefully when no relevant news found
+- [ ] Test with static provider verifies risk factor extraction
+- [ ] Code is formatted
+
+---
+
+## AIP-005 — Unified Price Intelligence Endpoint 🟠
+
+**Labels:** `backend`, `ai`, `business-logic`, `pricing`
+**Depends on:** `AIP-002` (required), `AIP-003` (optional), `AIP-004` (optional)
+
+Combine all available intelligence into a single endpoint that assembles whatever data sources are
+available and produces the richest possible suggestion.
+
+**Update endpoint:**
+
+- `GET /api/v1/voyages/{voyageId}/price-intelligence?containerSize=TWENTY_FOOT`
+
+This replaces / wraps the endpoint from `AIP-002`. It gracefully degrades:
+
+- If only historical data is available → Tier 1 suggestion
+- If market data is configured → Tier 2 enriched suggestion
+- If news feeds are configured → Tier 3 with risk factors
+- Response always indicates which data sources were used
+
+**Full response:**
+
+```json
+{
+  "voyageNumber": "VOY-2025-010",
+  "route": "Jebel Ali → Shanghai",
+  "containerSize": "TWENTY_FOOT",
+  "suggestion": {
+    "lowUsd": 1300.00,
+    "highUsd": 1550.00,
+    "confidence": "HIGH",
+    "reasoning": "..."
+  },
+  "historicalData": {
+    "dataPoints": 12,
+    "avgUsd": 1180.00,
+    "minUsd": 950.00,
+    "maxUsd": 1400.00
+  },
+  "marketData": {
+    "spotRateUsd": 1380.00,
+    "source": "Freightos Baltic Index",
+    "asOfDate": "2025-03-28"
+  },
+  "riskFactors": [
+    {
+      "factor": "...",
+      "impact": "HIGH",
+      "description": "..."
+    }
+  ],
+  "dataSources": [
+    "historical",
+    "market",
+    "news"
+  ],
+  "generatedAt": "2025-03-28T14:30:00"
+}
+```
+
+**What to create:**
+
+- `PriceIntelligenceService` — orchestrator that gathers all available data, builds combined prompt,
+  calls `AiClient`
+- `PriceIntelligenceResponse` DTO
+- Refactor `PriceSuggestionService` from `AIP-002` into modular data gatherers that
+  `PriceIntelligenceService` calls
+
+**Business rules:**
+
+- `dataSources` array reflects what was actually used (not what's configured — if market API is
+  down, omit it)
+- Each data source failure should be logged but not break the endpoint
+- If `AiClient` itself fails, return 503 with a message
+
+**Acceptance criteria:**
+
+- [ ] Endpoint assembles all available data sources
+- [ ] Gracefully degrades when sources are unavailable
+- [ ] `dataSources` accurately reflects what was used
+- [ ] Returns 503 if AI service is unreachable
+- [ ] Test with `NoOpAiClient` + static providers verifies full flow
+- [ ] Test with only historical data verifies graceful degradation
 - [ ] Code is formatted
 
 ---
@@ -928,6 +1289,14 @@ TRK-002 (Public Tracking)
   ├──→ TRK-005 (Tracking Events)
   │    └──→ TRK-006 (Gate Pass PDF)
   └──→ TRK-004 (QR on Invoice)
+
+AIP-001 (AI Service)
+  └──→ AIP-002 (Historical Suggestion)
+       ├──→ AIP-003 (Market Data)
+       ├──→ AIP-004 (News Risk Factors)
+       └──→ AIP-005 (Unified Intelligence)
+            ├── uses AIP-003 (optional)
+            └── uses AIP-004 (optional)
 ```
 
 ## Suggested Team Allocation
@@ -939,9 +1308,10 @@ TRK-002 (Public Tracking)
 | C     | `FIN-001` → `FIN-002`                         | `PRC-001` + `FIN-001` complete               |
 | D     | `AGT-001` → `AGT-002` → `AGT-003`             | `PRC-001` + `AGT-001` complete               |
 | E     | `TRK-001` → `TRK-002` → `TRK-005` → `TRK-006` | `TRK-001` anytime; `TRK-006` needs `CST-001` |
-| —     | `CST-001`                                     | Anytime (no Phase 2 dependency)              |
-| —     | `TRK-003`                                     | After `TRK-001` + `TRK-002`                  |
-| —     | `TRK-004`                                     | After `TRK-001` + `INV-001`                  |
+| F     | `AIP-001` → `AIP-002` → `AIP-005`             | `AIP-001` anytime; `AIP-002` needs `PRC-001` |
+| —     | `CST-001`                                     | Anytime                                      |
+| —     | `TRK-003`, `TRK-004`                          | After their dependencies                     |
+| —     | `AIP-003`, `AIP-004`                          | After `AIP-002`, independent of each other   |
 
-Tracks A, B, and E can run fully in parallel. `TRK-003` and `TRK-004` are good single-issue pickups
-for someone finishing early.
+Tracks A, B, E, and F can all run in parallel. `AIP-003` and `AIP-004` are independent enrichment
+modules — assign them to whoever finishes early.

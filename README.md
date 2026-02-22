@@ -206,6 +206,8 @@ guidelines.
 All issues use a domain-prefixed naming convention (e.g. `PRC-001`, `VPL-002`) so dependencies are
 easy to follow. See the naming table at the top of each issues file.
 
+For the big picture on where this project is headed, see the [ROADMAP.md](ROADMAP.md).
+
 ## Tips for Contributors
 
 - **Don't skip the DTO layer** — never expose JPA entities directly in REST responses.
