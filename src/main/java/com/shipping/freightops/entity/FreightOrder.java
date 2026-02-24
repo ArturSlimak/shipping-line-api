@@ -9,7 +9,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 /** A freight booking made by the internal ops team, assigning a container to a voyage. */
@@ -27,10 +26,11 @@ public class FreightOrder extends BaseEntity {
   @JoinColumn(name = "container_id", nullable = false)
   private Container container;
 
-  /** Username or team identifier of whoever placed the order. */
-  @NotBlank
-  @Column(nullable = false)
-  private String orderedBy;
+  /** The agent who placed this order. */
+  @NotNull
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "agent_id", nullable = false)
+  private Agent agent;
 
   @Column(length = 500)
   private String notes;
@@ -58,12 +58,12 @@ public class FreightOrder extends BaseEntity {
     this.container = container;
   }
 
-  public String getOrderedBy() {
-    return orderedBy;
+  public Agent getAgent() {
+    return agent;
   }
 
-  public void setOrderedBy(String orderedBy) {
-    this.orderedBy = orderedBy;
+  public void setAgent(Agent agent) {
+    this.agent = agent;
   }
 
   public String getNotes() {

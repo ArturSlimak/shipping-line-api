@@ -10,7 +10,8 @@ public class FreightOrderResponse {
   private Long id;
   private String voyageNumber;
   private String containerCode;
-  private String orderedBy;
+  private Long agentId;
+  private String agentName;
   private String notes;
   private OrderStatus status;
   private LocalDateTime createdAt;
@@ -21,7 +22,8 @@ public class FreightOrderResponse {
     dto.id = order.getId();
     dto.voyageNumber = order.getVoyage().getVoyageNumber();
     dto.containerCode = order.getContainer().getContainerCode();
-    dto.orderedBy = order.getOrderedBy();
+    dto.agentId = order.getAgent().getId();
+    dto.agentName = order.getAgent().getName();
     dto.notes = order.getNotes();
     dto.status = order.getStatus();
     dto.createdAt = order.getCreatedAt();
@@ -40,8 +42,12 @@ public class FreightOrderResponse {
     return containerCode;
   }
 
-  public String getOrderedBy() {
-    return orderedBy;
+  public Long getAgentId() {
+    return agentId;
+  }
+
+  public String getAgentName() {
+    return agentName;
   }
 
   public String getNotes() {

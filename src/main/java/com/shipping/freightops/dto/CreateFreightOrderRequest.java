@@ -1,6 +1,5 @@
 package com.shipping.freightops.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 /** Payload for creating a new freight order. */
@@ -12,8 +11,8 @@ public class CreateFreightOrderRequest {
   @NotNull(message = "Container ID is required")
   private Long containerId;
 
-  @NotBlank(message = "orderedBy is required")
-  private String orderedBy;
+  @NotNull(message = "Agent ID is required")
+  private Long agentId;
 
   private String notes;
 
@@ -33,12 +32,12 @@ public class CreateFreightOrderRequest {
     this.containerId = containerId;
   }
 
-  public String getOrderedBy() {
-    return orderedBy;
+  public Long getAgentId() {
+    return agentId;
   }
 
-  public void setOrderedBy(String orderedBy) {
-    this.orderedBy = orderedBy;
+  public void setAgentId(Long agentId) {
+    this.agentId = agentId;
   }
 
   public String getNotes() {

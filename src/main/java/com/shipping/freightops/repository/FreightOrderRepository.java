@@ -11,5 +11,5 @@ public interface FreightOrderRepository extends JpaRepository<FreightOrder, Long
 
   List<FreightOrder> findByStatus(OrderStatus status);
 
-  List<FreightOrder> findByOrderedBy(String orderedBy);
+  List<FreightOrder> findByAgentId(Long agentId);
 }

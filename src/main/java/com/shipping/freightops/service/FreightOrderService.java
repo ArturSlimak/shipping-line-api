@@ -1,10 +1,12 @@
 package com.shipping.freightops.service;
 
 import com.shipping.freightops.dto.CreateFreightOrderRequest;
+import com.shipping.freightops.entity.Agent;
 import com.shipping.freightops.entity.Container;
 import com.shipping.freightops.entity.FreightOrder;
 import com.shipping.freightops.entity.Voyage;
 import com.shipping.freightops.enums.VoyageStatus;
+import com.shipping.freightops.repository.AgentRepository;
 import com.shipping.freightops.repository.ContainerRepository;
 import com.shipping.freightops.repository.FreightOrderRepository;
 import com.shipping.freightops.repository.VoyageRepository;
@@ -19,14 +21,17 @@ public class FreightOrderService {
   private final FreightOrderRepository orderRepository;
   private final VoyageRepository voyageRepository;
   private final ContainerRepository containerRepository;
+  private final AgentRepository agentRepository;
 
   public FreightOrderService(
       FreightOrderRepository orderRepository,
       VoyageRepository voyageRepository,
-      ContainerRepository containerRepository) {
+      ContainerRepository containerRepository,
+      AgentRepository agentRepository) {
     this.orderRepository = orderRepository;
     this.voyageRepository = voyageRepository;
     this.containerRepository = containerRepository;
+    this.agentRepository = agentRepository;
   }
 
   @Transactional
@@ -49,10 +54,20 @@ public class FreightOrderService {
                     new IllegalArgumentException(
                         "Container not found: " + request.getContainerId()));
 
+    Agent agent =
+        agentRepository
+            .findById(request.getAgentId())
+            .orElseThrow(
+                () -> new IllegalArgumentException("Agent not found: " + request.getAgentId()));
+
+    if (!agent.isActive()) {
+      throw new IllegalStateException("Cannot place order with inactive agent: " + agent.getId());
+    }
+
     FreightOrder order = new FreightOrder();
     order.setVoyage(voyage);
     order.setContainer(container);
-    order.setOrderedBy(request.getOrderedBy());
+    order.setAgent(agent);
     order.setNotes(request.getNotes());
 
     return orderRepository.save(order);

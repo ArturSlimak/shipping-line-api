@@ -7,17 +7,21 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shipping.freightops.dto.CreateFreightOrderRequest;
+import com.shipping.freightops.entity.Agent;
 import com.shipping.freightops.entity.Container;
 import com.shipping.freightops.entity.Port;
 import com.shipping.freightops.entity.Vessel;
 import com.shipping.freightops.entity.Voyage;
+import com.shipping.freightops.enums.AgentType;
 import com.shipping.freightops.enums.ContainerSize;
 import com.shipping.freightops.enums.ContainerType;
+import com.shipping.freightops.repository.AgentRepository;
 import com.shipping.freightops.repository.ContainerRepository;
 import com.shipping.freightops.repository.FreightOrderRepository;
 import com.shipping.freightops.repository.PortRepository;
 import com.shipping.freightops.repository.VesselRepository;
 import com.shipping.freightops.repository.VoyageRepository;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -45,9 +49,11 @@ class FreightOrderControllerTest {
   @Autowired private ContainerRepository containerRepository;
   @Autowired private VoyageRepository voyageRepository;
   @Autowired private FreightOrderRepository freightOrderRepository;
+  @Autowired private AgentRepository agentRepository;
 
   private Voyage savedVoyage;
   private Container savedContainer;
+  private Agent savedAgent;
 
   @BeforeEach
   void setUp() {
@@ -57,6 +63,7 @@ class FreightOrderControllerTest {
     containerRepository.deleteAll();
     vesselRepository.deleteAll();
     portRepository.deleteAll();
+    agentRepository.deleteAll();
 
     Port departure = portRepository.save(new Port("AEJEA", "Jebel Ali", "UAE"));
     Port arrival = portRepository.save(new Port("CNSHA", "Shanghai", "China"));
@@ -74,6 +81,13 @@ class FreightOrderControllerTest {
     savedContainer =
         containerRepository.save(
             new Container("TSTU1234567", ContainerSize.TWENTY_FOOT, ContainerType.DRY));
+
+    Agent agent = new Agent();
+    agent.setName("Test Agent");
+    agent.setEmail("test@agent.com");
+    agent.setCommissionPercent(new BigDecimal("5.00"));
+    agent.setType(AgentType.INTERNAL);
+    savedAgent = agentRepository.save(agent);
   }
 
   @Test
@@ -82,7 +96,7 @@ class FreightOrderControllerTest {
     CreateFreightOrderRequest request = new CreateFreightOrderRequest();
     request.setVoyageId(savedVoyage.getId());
     request.setContainerId(savedContainer.getId());
-    request.setOrderedBy("ops-team");
+    request.setAgentId(savedAgent.getId());
     request.setNotes("Urgent delivery");
 
     mockMvc
@@ -93,7 +107,8 @@ class FreightOrderControllerTest {
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.voyageNumber").value("VOY-001"))
         .andExpect(jsonPath("$.containerCode").value("TSTU1234567"))
-        .andExpect(jsonPath("$.orderedBy").value("ops-team"))
+        .andExpect(jsonPath("$.agentId").value(savedAgent.getId()))
+        .andExpect(jsonPath("$.agentName").value("Test Agent"))
         .andExpect(jsonPath("$.status").value("PENDING"));
   }
 
