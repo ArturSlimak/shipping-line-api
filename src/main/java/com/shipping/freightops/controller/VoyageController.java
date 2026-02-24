@@ -1,6 +1,7 @@
 package com.shipping.freightops.controller;
 
 import com.shipping.freightops.dto.*;
+import com.shipping.freightops.entity.FreightOrder;
 import com.shipping.freightops.entity.Voyage;
 import com.shipping.freightops.entity.VoyagePrice;
 import com.shipping.freightops.enums.VoyageStatus;
@@ -109,5 +110,21 @@ public class VoyageController {
     Page<VoyagePrice> voyagePrices = voyageService.getAllPricesByVoyageId(voyageId, pageable);
     Page<VoyagePriceResponse> mapped = voyagePrices.map(VoyagePriceResponse::fromEntity);
     return ResponseEntity.ok(PageResponse.from(mapped));
+  }
+
+  @Operation(summary = "Get load summary for a voyage")
+  @ApiResponses({
+    @ApiResponse(responseCode = "200", description = "Voyage load retrieved"),
+    @ApiResponse(responseCode = "404", description = "Voyage not found")
+  })
+  @GetMapping("/{voyageId}/load")
+  public ResponseEntity<LoadSummaryResponse> getLoadSummary(@PathVariable Long voyageId) {
+    Voyage voyage = voyageService.getById(voyageId);
+    List<FreightOrder> orders = voyageService.getActiveOrdersForVoyage(voyageId);
+    int currentLoadTeu = voyageService.calculateCurrentLoadTeu(orders);
+    int containerCount = orders.size();
+
+    return ResponseEntity.ok(
+        LoadSummaryResponse.fromEntity(voyage, currentLoadTeu, containerCount));
   }
 }

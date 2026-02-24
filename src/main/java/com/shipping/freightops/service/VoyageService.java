@@ -2,15 +2,10 @@ package com.shipping.freightops.service;
 
 import com.shipping.freightops.dto.CreateVoyageRequest;
 import com.shipping.freightops.dto.VoyagePriceRequest;
-import com.shipping.freightops.entity.Port;
-import com.shipping.freightops.entity.Vessel;
-import com.shipping.freightops.entity.Voyage;
-import com.shipping.freightops.entity.VoyagePrice;
+import com.shipping.freightops.entity.*;
+import com.shipping.freightops.enums.OrderStatus;
 import com.shipping.freightops.enums.VoyageStatus;
-import com.shipping.freightops.repository.PortRepository;
-import com.shipping.freightops.repository.VesselRepository;
-import com.shipping.freightops.repository.VoyagePriceRepository;
-import com.shipping.freightops.repository.VoyageRepository;
+import com.shipping.freightops.repository.*;
 import jakarta.validation.Valid;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,6 +22,7 @@ public class VoyageService {
   private final VesselRepository vesselRepository;
   private final PortRepository portRepository;
   private final VoyagePriceRepository voyagePriceRepository;
+  private final FreightOrderRepository orderRepository;
 
   private Voyage mapCreateVoyageRequestToVoyage(CreateVoyageRequest voyageRequest) {
     Voyage voyage = new Voyage();
@@ -66,11 +62,13 @@ public class VoyageService {
       VoyageRepository voyageRepository,
       VesselRepository vesselRepository,
       PortRepository portRepository,
-      VoyagePriceRepository voyagePriceRepository) {
+      VoyagePriceRepository voyagePriceRepository,
+      FreightOrderRepository orderRepository) {
     this.voyageRepository = voyageRepository;
     this.vesselRepository = vesselRepository;
     this.portRepository = portRepository;
     this.voyagePriceRepository = voyagePriceRepository;
+    this.orderRepository = orderRepository;
   }
 
   public List<Voyage> getAll() {
@@ -136,5 +134,22 @@ public class VoyageService {
       throw new IllegalArgumentException("Voyage not found");
     }
     return voyagePriceRepository.findByVoyageId(voyageId, pageable);
+  }
+
+  @Transactional(readOnly = true)
+  public List<FreightOrder> getActiveOrdersForVoyage(Long voyageId) {
+    return orderRepository.findByVoyageIdAndStatusIn(
+        voyageId, List.of(OrderStatus.PENDING, OrderStatus.CONFIRMED, OrderStatus.IN_TRANSIT));
+  }
+
+  public int calculateCurrentLoadTeu(List<FreightOrder> orders) {
+    return orders.stream()
+        .mapToInt(
+            order ->
+                switch (order.getContainer().getSize()) {
+                  case TWENTY_FOOT -> 1;
+                  case FORTY_FOOT -> 2;
+                })
+        .sum();
   }
 }
