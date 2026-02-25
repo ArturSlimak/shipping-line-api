@@ -8,17 +8,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shipping.freightops.dto.CreateVoyageRequest;
 import com.shipping.freightops.dto.VoyagePriceRequest;
-import com.shipping.freightops.entity.Port;
-import com.shipping.freightops.entity.Vessel;
-import com.shipping.freightops.entity.Voyage;
-import com.shipping.freightops.entity.VoyagePrice;
+import com.shipping.freightops.entity.*;
 import com.shipping.freightops.enums.ContainerSize;
-import com.shipping.freightops.repository.PortRepository;
-import com.shipping.freightops.repository.VesselRepository;
-import com.shipping.freightops.repository.VoyagePriceRepository;
-import com.shipping.freightops.repository.VoyageRepository;
+import com.shipping.freightops.enums.ContainerType;
+import com.shipping.freightops.enums.OrderStatus;
+import com.shipping.freightops.repository.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.hamcrest.CoreMatchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -39,22 +36,32 @@ public class VoyageControllerTest {
   @Autowired private MockMvc mockMvc;
   @Autowired private VesselRepository vesselRepository;
   @Autowired private VoyagePriceRepository voyagePriceRepository;
+  @Autowired private FreightOrderRepository freightOrderRepository;
+  @Autowired private ContainerRepository containerRepository;
+  @Autowired private CustomerRepository customerRepository;
 
   private Vessel vessel;
   private Port arrivalPort;
   private Port departurePort;
   private Voyage voyage;
   @Autowired private ObjectMapper objectMapper;
+  private Container container20;
+  private Container container40;
+  private Customer customer;
 
   @BeforeEach
   void setUp() {
+    freightOrderRepository.deleteAll();
     voyagePriceRepository.deleteAll();
     voyageRepository.deleteAll();
     vesselRepository.deleteAll();
     portRepository.deleteAll();
+    containerRepository.deleteAll();
+    customerRepository.deleteAll();
+
     Port port = new Port("TGKRY", "kalgary", "Togo");
     Port port2 = new Port("JPTKY", "tokyo", "Japan");
-    Vessel vessel = new Vessel("SeeFox", "111", 1);
+    Vessel vessel = new Vessel("SeeFox", "111", 4);
     departurePort = portRepository.save(port);
     arrivalPort = portRepository.save(port2);
     this.vessel = vesselRepository.save(vessel);
@@ -68,6 +75,19 @@ public class VoyageControllerTest {
     voyage.setMaxCapacityTeu(vessel.getCapacityTeu());
     voyage.setBookingOpen(true);
     this.voyage = voyageRepository.save(voyage);
+
+    container20 =
+        containerRepository.save(
+            new Container("C20", ContainerSize.TWENTY_FOOT, ContainerType.DRY));
+
+    container40 =
+        containerRepository.save(new Container("C40", ContainerSize.FORTY_FOOT, ContainerType.DRY));
+
+    Customer c = new Customer();
+    c.setCompanyName("Test Co");
+    c.setContactName("John Doe");
+    c.setEmail("john@test.com");
+    customer = customerRepository.save(c);
   }
 
   @Test
@@ -295,5 +315,101 @@ public class VoyageControllerTest {
     mockMvc
         .perform(get("/api/v1/voyages/{id}/prices", 99999L).param("page", "0").param("size", "20"))
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  @DisplayName("GET /voyages/{id}/load → returns correct summary")
+  void getLoadSummary_ok() throws Exception {
+
+    FreightOrder order1 = new FreightOrder();
+    order1.setVoyage(voyage);
+    order1.setContainer(container20);
+    order1.setCustomer(customer);
+    order1.setOrderedBy("ops");
+    order1.setBasePriceUsd(BigDecimal.valueOf(1000));
+    order1.setDiscountPercent(BigDecimal.ZERO);
+    order1.setFinalPrice(BigDecimal.valueOf(1000));
+    order1.setStatus(OrderStatus.PENDING);
+
+    FreightOrder order2 = new FreightOrder();
+    order2.setVoyage(voyage);
+    order2.setContainer(container40);
+    order2.setCustomer(customer);
+    order2.setOrderedBy("ops");
+    order2.setBasePriceUsd(BigDecimal.valueOf(2000));
+    order2.setDiscountPercent(BigDecimal.ZERO);
+    order2.setFinalPrice(BigDecimal.valueOf(2000));
+    order2.setStatus(OrderStatus.CONFIRMED);
+
+    freightOrderRepository.saveAll(List.of(order1, order2));
+
+    mockMvc
+        .perform(get("/api/v1/voyages/" + voyage.getId() + "/load"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.voyageNumber").value("E-228"))
+        .andExpect(jsonPath("$.maxCapacityTeu").value(4))
+        .andExpect(jsonPath("$.currentLoadTeu").value(3))
+        .andExpect(jsonPath("$.containerCount").value(2))
+        .andExpect(jsonPath("$.bookingOpen").value(true))
+        .andExpect(jsonPath("$.utilizationPercent").value(75.0));
+  }
+
+  @Test
+  @DisplayName("GET /voyages/{id}/load → empty voyage")
+  void getLoadSummary_empty() throws Exception {
+
+    mockMvc
+        .perform(get("/api/v1/voyages/" + voyage.getId() + "/load"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.voyageNumber").value("E-228"))
+        .andExpect(jsonPath("$.maxCapacityTeu").value(4))
+        .andExpect(jsonPath("$.currentLoadTeu").value(0))
+        .andExpect(jsonPath("$.containerCount").value(0))
+        .andExpect(jsonPath("$.bookingOpen").value(true))
+        .andExpect(jsonPath("$.utilizationPercent").value(0.0));
+  }
+
+  @Test
+  @DisplayName("GET /voyages/{id}/load → ignores cancelled orders")
+  void getLoadSummary_ignoresCancelled() throws Exception {
+
+    FreightOrder order1 = new FreightOrder();
+    order1.setVoyage(voyage);
+    order1.setContainer(container20);
+    order1.setCustomer(customer);
+    order1.setOrderedBy("ops");
+    order1.setBasePriceUsd(BigDecimal.valueOf(1000));
+    order1.setDiscountPercent(BigDecimal.ZERO);
+    order1.setFinalPrice(BigDecimal.valueOf(1000));
+    order1.setStatus(OrderStatus.CANCELLED);
+
+    FreightOrder order2 = new FreightOrder();
+    order2.setVoyage(voyage);
+    order2.setContainer(container40);
+    order2.setCustomer(customer);
+    order2.setOrderedBy("ops");
+    order2.setBasePriceUsd(BigDecimal.valueOf(2000));
+    order2.setDiscountPercent(BigDecimal.ZERO);
+    order2.setFinalPrice(BigDecimal.valueOf(2000));
+    order2.setStatus(OrderStatus.CONFIRMED);
+
+    freightOrderRepository.saveAll(List.of(order1, order2));
+
+    mockMvc
+        .perform(get("/api/v1/voyages/" + voyage.getId() + "/load"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.voyageNumber").value("E-228"))
+        .andExpect(jsonPath("$.maxCapacityTeu").value(4))
+        .andExpect(jsonPath("$.currentLoadTeu").value(2))
+        .andExpect(jsonPath("$.containerCount").value(1))
+        .andExpect(jsonPath("$.bookingOpen").value(true))
+        .andExpect(jsonPath("$.utilizationPercent").value(50.0));
+  }
+
+  @Test
+  @DisplayName("GET /voyages/{id}/load → 404")
+  void getLoadSummary_notFound() throws Exception {
+
+    mockMvc.perform(get("/api/v1/voyages/999999/load")).andExpect(status().isNotFound());
   }
 }

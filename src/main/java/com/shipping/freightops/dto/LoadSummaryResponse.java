@@ -18,8 +18,13 @@ public class LoadSummaryResponse {
     dto.currentLoadTeu = currentLoadTeu;
     dto.containerCount = containerCount;
     dto.bookingOpen = voyage.isBookingOpen();
-
+    dto.utilizationPercent = calculateUtilization(dto.currentLoadTeu, dto.maxCapacityTeu);
     return dto;
+  }
+
+  private static double calculateUtilization(int current, int max) {
+    if (max == 0) return 0.0;
+    return Math.round((current * 1000.0) / max) / 10.0;
   }
 
   public String getVoyageNumber() {

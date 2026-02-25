@@ -154,6 +154,7 @@ public class VoyageService {
         .sum();
   }
 
+  @Transactional
   public Voyage updateBookingStatus(Long voyageId, BookingStatusUpdateRequest request) {
     Voyage voyage =
         voyageRepository
