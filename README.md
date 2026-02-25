@@ -207,7 +207,7 @@ locally.
 
 ## CI / GitHub Actions
 
-Every push to `main`/`develop` and every PR triggers the CI pipeline:
+Every push to `master`/`develop` and every PR triggers the CI pipeline:
 
 1. **Build & Test** — `mvn clean verify` with JDK 21
 2. **Format Check** — `mvn fmt:check` fails the build if code isn't Google-formatted
