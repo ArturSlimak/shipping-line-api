@@ -79,7 +79,6 @@ public class VoyageControllerTest {
     agent.setType(AgentType.INTERNAL);
     agent.setCommissionPercent(BigDecimal.TEN);
     agentRepository.save(agent);
-
   }
 
   @Test

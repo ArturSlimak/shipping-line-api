@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shipping.freightops.dto.CreateFreightOrderRequest;
 import com.shipping.freightops.dto.UpdateDiscountRequest;
 import com.shipping.freightops.entity.*;
+import com.shipping.freightops.enums.AgentType;
 import com.shipping.freightops.enums.ContainerSize;
 import com.shipping.freightops.enums.ContainerType;
 import com.shipping.freightops.enums.OrderStatus;
@@ -46,10 +47,12 @@ class FreightOrderControllerTest {
   @Autowired private FreightOrderRepository freightOrderRepository;
   @Autowired private VoyagePriceRepository voyagePriceRepository;
   @Autowired private FreightOrderService freightOrderService;
+  @Autowired private AgentRepository agentRepository;
 
   private Voyage savedVoyage;
   private Container savedContainer;
   private Customer savedCustomer;
+  private Agent savedAgent;
 
   @BeforeEach
   void setUp() {
@@ -61,6 +64,7 @@ class FreightOrderControllerTest {
     customerRepository.deleteAll();
     vesselRepository.deleteAll();
     portRepository.deleteAll();
+    agentRepository.deleteAll();
     Port departure = portRepository.save(new Port("AEJEA", "Jebel Ali", "UAE"));
     Port arrival = portRepository.save(new Port("CNSHA", "Shanghai", "China"));
     Vessel vessel = vesselRepository.save(new Vessel("MV Test", "9999999", 3000));
@@ -89,6 +93,14 @@ class FreightOrderControllerTest {
     price.setContainerSize(ContainerSize.TWENTY_FOOT);
     price.setBasePriceUsd(BigDecimal.valueOf(1000));
     voyagePriceRepository.save(price);
+
+    savedAgent = new Agent();
+    savedAgent.setActive(true);
+    savedAgent.setName("Test Agent");
+    savedAgent.setEmail("agent@somewhere.com");
+    savedAgent.setType(AgentType.INTERNAL);
+    savedAgent.setCommissionPercent(BigDecimal.TEN);
+    agentRepository.save(savedAgent);
   }
 
   @Test
@@ -100,6 +112,7 @@ class FreightOrderControllerTest {
     request.setCustomerId(savedCustomer.getId());
     request.setOrderedBy("ops-team");
     request.setNotes("Urgent delivery");
+    request.setAgentId(savedAgent.getId());
 
     mockMvc
         .perform(
@@ -142,6 +155,7 @@ class FreightOrderControllerTest {
       request.setCustomerId(savedCustomer.getId());
       request.setOrderedBy("user-" + i);
       request.setNotes("order-" + i);
+      request.setAgentId(savedAgent.getId());
 
       freightOrderService.createOrder(request);
     }
@@ -171,6 +185,7 @@ class FreightOrderControllerTest {
       request.setCustomerId(savedCustomer.getId());
       request.setOrderedBy("user-" + i);
       request.setNotes("order-" + i);
+      request.setAgentId(savedAgent.getId());
 
       freightOrderService.createOrder(request);
     }
@@ -197,6 +212,7 @@ class FreightOrderControllerTest {
       request.setCustomerId(savedCustomer.getId());
       request.setOrderedBy("user-" + i);
       request.setNotes("order-" + i);
+      request.setAgentId(savedAgent.getId());
 
       freightOrderService.createOrder(request);
     }
@@ -224,6 +240,7 @@ class FreightOrderControllerTest {
       request.setCustomerId(savedCustomer.getId());
       request.setOrderedBy("user-" + i);
       request.setNotes("order-" + i);
+      request.setAgentId(savedAgent.getId());
 
       freightOrderService.createOrder(request);
     }
@@ -247,6 +264,7 @@ class FreightOrderControllerTest {
     request.setCustomerId(savedCustomer.getId());
     request.setOrderedBy("ops-team");
     request.setNotes("Urgent delivery");
+    request.setAgentId(savedAgent.getId());
     FreightOrder order = freightOrderService.createOrder(request);
 
     UpdateDiscountRequest updateDiscountRequest = new UpdateDiscountRequest();
@@ -288,6 +306,7 @@ class FreightOrderControllerTest {
     request.setCustomerId(savedCustomer.getId());
     request.setOrderedBy("ops-team");
     request.setNotes("Urgent delivery");
+    request.setAgentId(savedAgent.getId());
     FreightOrder order = freightOrderService.createOrder(request);
 
     UpdateDiscountRequest updateDiscountRequest = new UpdateDiscountRequest();
@@ -311,6 +330,7 @@ class FreightOrderControllerTest {
     request.setCustomerId(savedCustomer.getId());
     request.setOrderedBy("ops-team");
     request.setNotes("Urgent delivery");
+    request.setAgentId(savedAgent.getId());
     FreightOrder order = freightOrderService.createOrder(request);
 
     order.setStatus(OrderStatus.CANCELLED);
