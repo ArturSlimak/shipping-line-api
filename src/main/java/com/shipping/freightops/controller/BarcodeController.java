@@ -21,23 +21,22 @@ public class BarcodeController {
   @GetMapping(value = "/code128", produces = MediaType.IMAGE_PNG_VALUE)
   public ResponseEntity<byte[]> generateBarcode(
       @RequestParam String content, @RequestParam int width, @RequestParam int height) {
-      try {
-          byte[] barcodeImage = barcodeService.generateBarcode(content, width, height);
-          return ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(barcodeImage);
-      }catch (Exception e) {
-        return ResponseEntity.status(500).build();
+    try {
+      byte[] barcodeImage = barcodeService.generateBarcode(content, width, height);
+      return ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(barcodeImage);
+    } catch (Exception e) {
+      return ResponseEntity.status(500).build();
     }
-
   }
 
   @GetMapping(value = "/qr", produces = MediaType.IMAGE_PNG_VALUE)
   public ResponseEntity<byte[]> generateQrCode(
       @RequestParam String content, @RequestParam int width, @RequestParam int height) {
-      try {
-          byte[] qrCodeImage = barcodeService.generateQrCode(content, width, height);
-          return ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(qrCodeImage);
-      } catch (Exception e) {
-        return ResponseEntity.status(500).build();
+    try {
+      byte[] qrCodeImage = barcodeService.generateQrCode(content, width, height);
+      return ResponseEntity.ok().contentType(MediaType.IMAGE_PNG).body(qrCodeImage);
+    } catch (Exception e) {
+      return ResponseEntity.status(500).build();
     }
   }
 }
