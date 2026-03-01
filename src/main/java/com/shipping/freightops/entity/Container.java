@@ -2,11 +2,7 @@ package com.shipping.freightops.entity;
 
 import com.shipping.freightops.enums.ContainerSize;
 import com.shipping.freightops.enums.ContainerType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -39,6 +35,7 @@ public class Container extends BaseEntity {
     this.containerCode = containerCode;
     this.size = size;
     this.type = type;
+    this.teu = size.getTeu();
   }
 
   public String getContainerCode() {
@@ -55,6 +52,7 @@ public class Container extends BaseEntity {
 
   public void setSize(ContainerSize size) {
     this.size = size;
+    this.teu = size.getTeu();
   }
 
   public ContainerType getType() {
@@ -66,6 +64,6 @@ public class Container extends BaseEntity {
   }
 
   public int getTeu() {
-    return size.getTeu();
+    return teu;
   }
 }
