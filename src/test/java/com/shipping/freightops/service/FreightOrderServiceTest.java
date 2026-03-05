@@ -51,6 +51,7 @@ public class FreightOrderServiceTest {
   @BeforeEach
   void setUp() {
     freightOrderRepository.deleteAll();
+    agentRepository.deleteAll();
     voyagePriceRepository.deleteAll();
     voyageRepository.deleteAll();
     containerRepository.deleteAll();
@@ -85,6 +86,13 @@ public class FreightOrderServiceTest {
     customer.setEmail("john@test.com");
     savedCustomer = customerRepository.save(customer);
 
+    Agent agent = new Agent();
+    agent.setName("Test Agent");
+    agent.setEmail("agent@test.com");
+    agent.setCommissionPercent(BigDecimal.valueOf(5));
+    agent.setType(AgentType.EXTERNAL);
+    savedAgent = agentRepository.save(agent);
+
     VoyagePrice price = new VoyagePrice();
     price.setVoyage(savedVoyage);
     price.setContainerSize(ContainerSize.TWENTY_FOOT);
@@ -107,6 +115,7 @@ public class FreightOrderServiceTest {
     request.setVoyageId(savedVoyage.getId());
     request.setContainerId(savedContainer.getId());
     request.setCustomerId(savedCustomer.getId());
+    request.setAgentId(savedAgent.getId());
     request.setOrderedBy("tester");
     request.setDiscountPercent(BigDecimal.valueOf(10)); // 10%
     request.setAgentId(savedAgent.getId());
@@ -125,6 +134,7 @@ public class FreightOrderServiceTest {
     request.setVoyageId(savedVoyage.getId());
     request.setContainerId(savedContainer.getId());
     request.setCustomerId(savedCustomer.getId());
+    request.setAgentId(savedAgent.getId());
     request.setOrderedBy("tester");
     request.setAgentId(savedAgent.getId());
 
@@ -183,6 +193,7 @@ public class FreightOrderServiceTest {
     request.setVoyageId(savedVoyage.getId());
     request.setContainerId(savedContainer.getId());
     request.setCustomerId(savedCustomer.getId());
+    request.setAgentId(savedAgent.getId());
     request.setOrderedBy("tester");
     request.setAgentId(savedAgent.getId());
 
@@ -206,6 +217,7 @@ public class FreightOrderServiceTest {
     request.setVoyageId(savedVoyage.getId());
     request.setContainerId(savedContainer.getId());
     request.setCustomerId(savedCustomer.getId());
+    request.setAgentId(savedAgent.getId());
     request.setOrderedBy("tester");
     request.setAgentId(savedAgent.getId());
 
@@ -240,6 +252,7 @@ public class FreightOrderServiceTest {
     request.setVoyageId(savedVoyage.getId());
     request.setContainerId(savedContainer.getId());
     request.setCustomerId(savedCustomer.getId());
+    request.setAgentId(savedAgent.getId());
     request.setOrderedBy("tester");
     request.setAgentId(savedAgent.getId());
 
@@ -271,6 +284,7 @@ public class FreightOrderServiceTest {
     request.setVoyageId(savedVoyage.getId());
     request.setContainerId(savedContainer.getId());
     request.setCustomerId(savedCustomer.getId());
+    request.setAgentId(savedAgent.getId());
     request.setOrderedBy("tester");
     request.setAgentId(savedAgent.getId());
 

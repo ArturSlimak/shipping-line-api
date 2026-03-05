@@ -61,6 +61,7 @@ class FreightOrderControllerTest {
   void setUp() {
     // Clear state between tests — children first to respect FK constraints
     freightOrderRepository.deleteAll();
+    agentRepository.deleteAll();
     voyagePriceRepository.deleteAll();
     voyageRepository.deleteAll();
     containerRepository.deleteAll();
@@ -92,6 +93,13 @@ class FreightOrderControllerTest {
     customer.setContactName("John Doe");
     customer.setEmail("John@testCust.com");
     savedCustomer = customerRepository.save(customer);
+
+    Agent agent = new Agent();
+    agent.setName("Test Agent");
+    agent.setEmail("agent@test.com");
+    agent.setCommissionPercent(BigDecimal.valueOf(5));
+    agent.setType(AgentType.EXTERNAL);
+    savedAgent = agentRepository.save(agent);
 
     VoyagePrice price = new VoyagePrice();
     price.setVoyage(savedVoyage);
@@ -129,6 +137,7 @@ class FreightOrderControllerTest {
     request.setVoyageId(savedVoyage.getId());
     request.setContainerId(savedContainer.getId());
     request.setCustomerId(savedCustomer.getId());
+    request.setAgentId(savedAgent.getId());
     request.setOrderedBy("ops-team");
     request.setNotes("Urgent delivery");
     request.setAgentId(savedAgent.getId());
@@ -172,6 +181,7 @@ class FreightOrderControllerTest {
       request.setVoyageId(savedVoyage.getId());
       request.setContainerId(savedContainer.getId());
       request.setCustomerId(savedCustomer.getId());
+      request.setAgentId(savedAgent.getId());
       request.setOrderedBy("user-" + i);
       request.setNotes("order-" + i);
       request.setAgentId(savedAgent.getId());
@@ -202,6 +212,7 @@ class FreightOrderControllerTest {
       request.setVoyageId(savedVoyage.getId());
       request.setContainerId(savedContainer.getId());
       request.setCustomerId(savedCustomer.getId());
+      request.setAgentId(savedAgent.getId());
       request.setOrderedBy("user-" + i);
       request.setNotes("order-" + i);
       request.setAgentId(savedAgent.getId());
@@ -229,6 +240,7 @@ class FreightOrderControllerTest {
       request.setVoyageId(savedVoyage.getId());
       request.setContainerId(savedContainer.getId());
       request.setCustomerId(savedCustomer.getId());
+      request.setAgentId(savedAgent.getId());
       request.setOrderedBy("user-" + i);
       request.setNotes("order-" + i);
       request.setAgentId(savedAgent.getId());
@@ -257,6 +269,7 @@ class FreightOrderControllerTest {
       request.setVoyageId(savedVoyage.getId());
       request.setContainerId(savedContainer.getId());
       request.setCustomerId(savedCustomer.getId());
+      request.setAgentId(savedAgent.getId());
       request.setOrderedBy("user-" + i);
       request.setNotes("order-" + i);
       request.setAgentId(savedAgent.getId());
@@ -281,6 +294,7 @@ class FreightOrderControllerTest {
     request.setVoyageId(savedVoyage.getId());
     request.setContainerId(savedContainer.getId());
     request.setCustomerId(savedCustomer.getId());
+    request.setAgentId(savedAgent.getId());
     request.setOrderedBy("ops-team");
     request.setNotes("Urgent delivery");
     request.setAgentId(savedAgent.getId());
@@ -323,6 +337,7 @@ class FreightOrderControllerTest {
     request.setVoyageId(savedVoyage.getId());
     request.setContainerId(savedContainer.getId());
     request.setCustomerId(savedCustomer.getId());
+    request.setAgentId(savedAgent.getId());
     request.setOrderedBy("ops-team");
     request.setNotes("Urgent delivery");
     request.setAgentId(savedAgent.getId());
@@ -347,6 +362,7 @@ class FreightOrderControllerTest {
     request.setVoyageId(savedVoyage.getId());
     request.setContainerId(savedContainer.getId());
     request.setCustomerId(savedCustomer.getId());
+    request.setAgentId(savedAgent.getId());
     request.setOrderedBy("ops-team");
     request.setNotes("Urgent delivery");
     request.setAgentId(savedAgent.getId());
