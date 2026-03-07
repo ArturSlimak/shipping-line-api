@@ -10,6 +10,8 @@ public class NoOpAiClient implements AiClient {
 
   @Override
   public String complete(String systemPrompt, String userPrompt) {
-    return "This is a mock AI response of the Noop implementation!";
+    return "{\"welcome\":\"This is a mock AI response of the Noop implementation!\", \"mock\":true, \"prompt\":\""
+        + userPrompt
+        + "\"}";
   }
 }

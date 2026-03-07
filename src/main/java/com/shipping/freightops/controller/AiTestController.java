@@ -7,6 +7,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,7 +38,8 @@ public class AiTestController {
         description = "Service unavailable, e.g., AI provider unreachable")
   })
   @PostMapping("/test")
-  public String test(@Valid @RequestBody AiTestRequest request) {
-    return aiClient.complete("You are a helpful assistant.", request.getPrompt());
+  public ResponseEntity<String> test(@Valid @RequestBody AiTestRequest request) {
+    String response = aiClient.complete("You are a helpful assistant.", request.getPrompt());
+    return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
   }
 }
