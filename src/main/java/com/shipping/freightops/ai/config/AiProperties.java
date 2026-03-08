@@ -10,6 +10,7 @@ public class AiProperties {
   private int maxTokens;
   private String baseUrl;
   private int connectTimeout;
+  private String anthropic_version;
 
   public String getProvider() {
     return provider;
@@ -57,5 +58,13 @@ public class AiProperties {
 
   public void setConnectTimeout(int connectTimeout) {
     this.connectTimeout = connectTimeout;
+  }
+
+  public String getAnthropic_version() {
+    return anthropic_version;
+  }
+
+  public void setAnthropic_version(String anthropic_version) {
+    this.anthropic_version = anthropic_version;
   }
 }

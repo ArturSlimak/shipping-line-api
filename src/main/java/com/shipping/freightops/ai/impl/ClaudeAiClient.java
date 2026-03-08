@@ -15,7 +15,6 @@ import org.springframework.web.client.RestClient;
 @Component
 @ConditionalOnProperty(name = "app.ai.provider", havingValue = "claude")
 public class ClaudeAiClient implements AiClient {
-  private static final String ANTHROPIC_VERSION = "2023-06-01";
   private final RestClient restClient;
   private final AiProperties aiProperties;
   private final ObjectMapper objectMapper;
@@ -29,7 +28,7 @@ public class ClaudeAiClient implements AiClient {
     this.restClient =
         builder
             .defaultHeader("x-api-key", aiProperties.getApiKey())
-            .defaultHeader("anthropic-version", ANTHROPIC_VERSION)
+            .defaultHeader("anthropic-version", aiProperties.getAnthropic_version())
             .build();
   }
 
