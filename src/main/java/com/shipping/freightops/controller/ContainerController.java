@@ -31,7 +31,7 @@ public class ContainerController {
     @ApiResponse(responseCode = "404", description = "Container not found"),
     @ApiResponse(responseCode = "500", description = "Error generating PDF label")
   })
-  @GetMapping(value = "/{id}/label", produces = MediaType.APPLICATION_PDF_VALUE)
+  @GetMapping(value = "/{id}/label")
   public ResponseEntity<byte[]> getLabelForContainer(@PathVariable long id) {
     ContainerLabelResponse responseDto = containerService.generateContainerLabel(id);
 
