@@ -3,6 +3,7 @@ package com.shipping.freightops.repository;
 import com.shipping.freightops.entity.FreightOrder;
 import com.shipping.freightops.enums.OrderStatus;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -51,4 +52,7 @@ public interface FreightOrderRepository extends JpaRepository<FreightOrder, Long
     WHERE c.containerCode = :containerCode
     """)
   List<FreightOrder> findByContainerCode(@Param("containerCode") String containerCode);
+
+  Optional<FreightOrder> findFirstByContainer_ContainerCodeAndStatusOrderByVoyage_DepartureTimeAsc(
+      String containerContainerCode, OrderStatus status);
 }

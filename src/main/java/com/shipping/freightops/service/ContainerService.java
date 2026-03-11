@@ -8,13 +8,14 @@ import com.shipping.freightops.config.AppProperties;
 import com.shipping.freightops.dto.ContainerLabelResponse;
 import com.shipping.freightops.entity.Container;
 import com.shipping.freightops.entity.FreightOrder;
+import com.shipping.freightops.enums.OrderStatus;
 import com.shipping.freightops.exception.PdfGenerationException;
 import com.shipping.freightops.repository.ContainerRepository;
 import com.shipping.freightops.repository.FreightOrderRepository;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
+import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -161,11 +162,13 @@ public class ContainerService {
     String arrivalPort = "-";
     String departureDate = "-";
 
-    List<FreightOrder> orders = freightOrderRepository.findByContainerCode(containerCode);
+    Optional<FreightOrder> activeOrderOpt =
+        freightOrderRepository
+            .findFirstByContainer_ContainerCodeAndStatusOrderByVoyage_DepartureTimeAsc(
+                containerCode, OrderStatus.CONFIRMED);
 
-    if (!orders.isEmpty()) {
-      FreightOrder fo = orders.getFirst();
-
+    if (activeOrderOpt.isPresent()) {
+      FreightOrder fo = activeOrderOpt.get();
       voyageNumber = fo.getVoyage().getVoyageNumber();
       vesselName = fo.getVoyage().getVessel().getName();
       departurePort = fo.getVoyage().getDeparturePort().getName();
