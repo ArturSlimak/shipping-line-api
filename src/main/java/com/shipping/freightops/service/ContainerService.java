@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 record ContainerLabelData(
     String containerCode,
@@ -55,6 +56,7 @@ public class ContainerService {
     this.appProperties = appProperties;
   }
 
+  @Transactional(readOnly = true)
   public ContainerLabelResponse generateContainerLabel(long containerId) {
 
     Container container = getContainer(containerId);
